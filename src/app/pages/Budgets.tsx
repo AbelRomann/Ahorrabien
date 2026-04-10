@@ -3,10 +3,11 @@ import { Plus, TrendingUp } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
 import { BottomNav } from '../components/BottomNav';
-import { mockBudgets } from '../data/mockData';
+import { useFinanceStore } from '../store/useFinanceStore';
 import { getCategoryById } from '../data/categories';
 
 export function Budgets() {
+  const mockBudgets = useFinanceStore((state) => state.budgets); // Using the same variable name to avoid editing multiple lines
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}

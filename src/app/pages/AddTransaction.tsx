@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { CategoryChip } from '../components/CategoryChip';
 import { categories } from '../data/categories';
 import { toast } from 'sonner';
+import { useFinanceStore } from '../store/useFinanceStore';
 
 export function AddTransaction() {
   const navigate = useNavigate();
@@ -16,16 +17,29 @@ export function AddTransaction() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta');
 
+  const addTransaction = useFinanceStore((state) => state.addTransaction);
+
   const filteredCategories = categories.filter(
     c => c.type === type || c.type === 'both'
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !selectedCategory) {
       toast.error('Por favor completa todos los campos requeridos');
       return;
     }
+    
+    await addTransaction({
+      id: crypto.randomUUID(),
+      type,
+      amount: parseFloat(amount),
+      category: selectedCategory,
+      description,
+      date,
+      paymentMethod
+    });
+
     toast.success('Movimiento guardado exitosamente');
     setTimeout(() => navigate('/home'), 1000);
   };

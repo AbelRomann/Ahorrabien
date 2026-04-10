@@ -6,27 +6,30 @@ import { TransactionCard } from '../components/TransactionCard';
 import { BottomNav } from '../components/BottomNav';
 import { BalanceCard } from '../components/BalanceCard';
 import { StatCard } from '../components/StatCard';
-import { mockTransactions } from '../data/mockData';
+import { useFinanceStore } from '../store/useFinanceStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { getCategoryById } from '../data/categories';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 export function Home() {
   const navigate = useNavigate();
+  const transactions = useFinanceStore((state) => state.transactions);
+  const displayName = useAuthStore((state) => state.displayName);
 
-  const totalIncome = mockTransactions
+  const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalExpenses = mockTransactions
+  const totalExpenses = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIncome - totalExpenses;
 
-  const recentTransactions = mockTransactions.slice(0, 5);
+  const recentTransactions = transactions.slice(0, 5);
 
   // Expense by category for mini chart
-  const expenseByCategory = mockTransactions
+  const expenseByCategory = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
       const category = getCategoryById(t.category);
@@ -40,7 +43,7 @@ export function Home() {
     name,
     value,
     color: getCategoryById(
-      mockTransactions.find(t => getCategoryById(t.category)?.name === name)?.category || ''
+      transactions.find(t => getCategoryById(t.category)?.name === name)?.category || ''
     )?.color || '#10B981'
   }));
 
@@ -51,7 +54,7 @@ export function Home() {
         <div className="flex justify-between items-start mb-8">
           <div>
             <p className="text-white/80 text-sm">Buenos días,</p>
-            <h1 className="text-white text-2xl font-bold">Usuario</h1>
+            <h1 className="text-white text-2xl font-bold">{displayName}</h1>
           </div>
           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
             <Wallet size={24} className="text-white" />

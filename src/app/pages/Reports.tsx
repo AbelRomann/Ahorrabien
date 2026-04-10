@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { TrendingUp, Calendar } from 'lucide-react';
 import { BottomNav } from '../components/BottomNav';
-import { mockTransactions } from '../data/mockData';
+import { useFinanceStore } from '../store/useFinanceStore';
 import { getCategoryById } from '../data/categories';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 export function Reports() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
+  const transactions = useFinanceStore((state) => state.transactions);
 
   // Expense by category
-  const expenseByCategory = mockTransactions
+  const expenseByCategory = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
       const category = getCategoryById(t.category);

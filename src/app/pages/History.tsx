@@ -3,16 +3,18 @@ import { Search, SlidersHorizontal, Calendar } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { TransactionCard } from '../components/TransactionCard';
 import { BottomNav } from '../components/BottomNav';
-import { mockTransactions } from '../data/mockData';
+import { useFinanceStore } from '../store/useFinanceStore';
 import { categories } from '../data/categories';
+import { Transaction } from '../data/types';
 
 export function History() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const transactions = useFinanceStore((state) => state.transactions);
 
-  const filteredTransactions = mockTransactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesSearch = transaction.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || transaction.type === filterType;
     return matchesSearch && matchesType;
   });
@@ -26,7 +28,7 @@ export function History() {
     }
     acc[key].push(transaction);
     return acc;
-  }, {} as Record<string, typeof mockTransactions>);
+  }, {} as Record<string, Transaction[]>);
 
   return (
     <div className="min-h-screen bg-background pb-20">

@@ -1,9 +1,9 @@
 import { createBrowserRouter } from 'react-router';
 import { SplashScreen } from './pages/SplashScreen';
-import { Onboarding } from './pages/Onboarding';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { AddTransaction } from './pages/AddTransaction';
+import { EditTransaction } from './pages/EditTransaction';
 import { History } from './pages/History';
 import { Budgets } from './pages/Budgets';
 import { Reports } from './pages/Reports';
@@ -16,16 +16,8 @@ export const router = createBrowserRouter([
     Component: SplashScreen,
   },
   {
-    path: '/onboarding',
-    Component: Onboarding,
-  },
-  {
     path: '/login',
     Component: Login,
-  },
-  {
-    path: '/register',
-    Component: Login, // Using same component for demo
   },
   {
     path: '/home',
@@ -34,6 +26,10 @@ export const router = createBrowserRouter([
   {
     path: '/add-transaction',
     Component: AddTransaction,
+  },
+  {
+    path: '/edit-transaction/:id',
+    Component: EditTransaction,
   },
   {
     path: '/history',
