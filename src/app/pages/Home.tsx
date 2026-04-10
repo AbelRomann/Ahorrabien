@@ -1,155 +1,107 @@
-import React from 'react';
-import { Plus, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
-import { useNavigate } from 'react-router';
-import { Button } from '../components/ui/button';
-import { TransactionCard } from '../components/TransactionCard';
-import { BottomNav } from '../components/BottomNav';
-import { BalanceCard } from '../components/BalanceCard';
-import { StatCard } from '../components/StatCard';
+import React, { useMemo, useState } from 'react';
+import { ArrowUp, CircleDollarSign, Gauge, Sparkles, Target } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
-import { useAuthStore } from '../store/useAuthStore';
-import { getCategoryById } from '../data/categories';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { CurrencySwitch, FilterChips, FintechBackdrop, ProgressTrack } from '../components/fintech/FintechElements';
+import { FintechBottomNav } from '../components/fintech/FintechBottomNav';
+
+const periodOptions = ['Hoy', 'Semana', 'Mes', 'Año'];
 
 export function Home() {
-  const navigate = useNavigate();
+  const [activePeriod, setActivePeriod] = useState('Mes');
+  const [currency, setCurrency] = useState<'RDS' | 'US$'>('RDS');
   const transactions = useFinanceStore((state) => state.transactions);
-  const displayName = useAuthStore((state) => state.displayName);
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+  const stats = useMemo(() => {
+    const expenses = transactions.filter((t) => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const average = expenses / Math.max(new Date().getDate(), 1);
+    const monthlyBudget = 38000;
+    const pulse = Math.min((average / 1600) * 100, 100);
+    const monthProgress = Math.min((expenses / monthlyBudget) * 100, 100);
 
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    return {
+      expenses,
+      average,
+      monthlyBudget,
+      pulse,
+      monthProgress,
+    };
+  }, [transactions]);
 
-  const balance = totalIncome - totalExpenses;
-
-  const recentTransactions = transactions.slice(0, 5);
-
-  // Expense by category for mini chart
-  const expenseByCategory = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc, t) => {
-      const category = getCategoryById(t.category);
-      if (category) {
-        acc[category.name] = (acc[category.name] || 0) + t.amount;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-  const chartData = Object.entries(expenseByCategory).map(([name, value]) => ({
-    name,
-    value,
-    color: getCategoryById(
-      transactions.find(t => getCategoryById(t.category)?.name === name)?.category || ''
-    )?.color || '#10B981'
-  }));
+  const formatter = (amount: number) => {
+    const converted = currency === 'US$' ? amount / 58 : amount;
+    return `${currency === 'US$' ? 'US$' : 'RD$'}${converted.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-[#06B6D4] px-6 pt-12 pb-8 rounded-b-[2rem]">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-white/80 text-sm">Buenos días,</p>
-            <h1 className="text-white text-2xl font-bold">{displayName}</h1>
-          </div>
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-            <Wallet size={24} className="text-white" />
-          </div>
+    <div className="relative min-h-screen overflow-hidden bg-slate-100 pb-28 text-slate-900">
+      <FintechBackdrop />
+
+      <section className="relative px-6 pb-10 pt-12 text-white">
+        <p className="text-center text-xs uppercase tracking-[0.28em] text-white/75">Hoy es</p>
+        <h1 className="mt-2 text-center text-4xl font-bold">Mar, 17 de marzo</h1>
+
+        <div className="mt-6 flex justify-center">
+          <FilterChips options={periodOptions} active={activePeriod} onChange={setActivePeriod} />
         </div>
 
-        {/* Balance Card */}
-        <BalanceCard 
-          balance={balance} 
-          income={totalIncome} 
-          expenses={totalExpenses} 
-        />
-      </div>
+        <p className="mt-7 text-center text-sm uppercase tracking-[0.2em] text-white/80">Este mes has gastado</p>
+        <p className="mt-1 text-center text-5xl font-black tracking-tight">{formatter(stats.expenses || 29886)}</p>
 
-      {/* Quick Stats */}
-      <div className="px-6 -mt-6 mb-6">
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard
-            icon={TrendingUp}
-            label="Este mes"
-            value={`$${totalExpenses.toLocaleString()}`}
-            iconColor="#10B981"
-            iconBgColor="#10B98120"
-          />
-          <StatCard
-            icon={TrendingDown}
-            label="Ahorro"
-            value={`$${balance.toLocaleString()}`}
-            iconColor="#8B5CF6"
-            iconBgColor="#8B5CF620"
-          />
+        <div className="mx-auto mt-5 flex max-w-sm items-center justify-center gap-2 rounded-full bg-white/20 px-4 py-2.5 text-sm font-semibold backdrop-blur-sm">
+          <ArrowUp size={14} className="rounded-full bg-rose-500 p-0.5" />
+          <span>100% más que el mes pasado</span>
         </div>
-      </div>
 
-      {/* Gastos por categoría */}
-      <div className="px-6 mb-6">
-        <div className="bg-card rounded-2xl p-6 border border-border">
-          <h3 className="font-semibold mb-4">Gastos por categoría</h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+        <div className="mt-5 flex justify-center">
+          <CurrencySwitch active={currency} onChange={setCurrency} />
+        </div>
+      </section>
+
+      <section className="relative -mt-1 rounded-t-[34px] bg-[#f7faf9] px-5 pb-24 pt-5 shadow-[0_-16px_50px_rgba(2,6,23,0.1)]">
+        <article className="rounded-[24px] bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.08)]">
+          <div className="mb-3 flex items-center gap-2 text-slate-500">
+            <CircleDollarSign size={16} className="text-[#1FA971]" />
+            <p className="text-xs font-semibold uppercase tracking-[0.18em]">Gasto promedio mensual</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {chartData.slice(0, 4).map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-muted-foreground truncate">{item.name}</span>
+          <p className="text-4xl font-black text-slate-900">{formatter(stats.average * 30 || 18768)}</p>
+        </article>
+
+        <article className="mt-4 rounded-[24px] bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.08)]">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-slate-500">
+                <Gauge size={15} className="text-[#1FA971]" />
+                <p className="text-xs font-semibold uppercase tracking-[0.18em]">Pulso diario</p>
               </div>
-            ))}
+              <p className="text-sm font-semibold text-[#1FA971]">Vas bien hoy</p>
+            </div>
+            <p className="text-3xl font-black text-slate-900">{stats.pulse.toFixed(0)}%</p>
           </div>
-        </div>
-      </div>
+          <ProgressTrack value={stats.pulse} />
+          <div className="mt-3 flex justify-between text-sm">
+            <p className="text-slate-500">Gastado hoy <span className="font-bold text-slate-900">{formatter(0)}</span></p>
+            <p className="text-slate-500">Meta diaria <span className="font-bold text-slate-900">{formatter(1548.39)}</span></p>
+          </div>
+        </article>
 
-      {/* Recent Transactions */}
-      <div className="px-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold">Últimos movimientos</h3>
-          <button 
-            onClick={() => navigate('/history')}
-            className="text-sm text-primary hover:underline"
-          >
-            Ver todos
-          </button>
-        </div>
-        <div className="space-y-3">
-          {recentTransactions.map(transaction => (
-            <TransactionCard key={transaction.id} transaction={transaction} />
-          ))}
-        </div>
-      </div>
+        <article className="mt-4 rounded-[24px] bg-white p-5 shadow-[0_10px_35px_rgba(15,23,42,0.08)]">
+          <div className="mb-3 flex items-center justify-between text-slate-500">
+            <div className="flex items-center gap-2">
+              <Target size={15} className="text-[#1FA971]" />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]">Presupuesto del mes</p>
+            </div>
+            <Sparkles size={16} className="text-[#1FA971]" />
+          </div>
+          <p className="text-xl font-bold text-slate-900">{formatter(stats.monthlyBudget - stats.expenses)} disponible</p>
+          <p className="mb-3 text-sm text-slate-500">de {formatter(stats.monthlyBudget)}</p>
+          <ProgressTrack value={stats.monthProgress} tone={stats.monthProgress > 90 ? 'red' : 'green'} />
+        </article>
+      </section>
 
-      {/* Floating Action Button */}
-      <button
-        onClick={() => navigate('/add-transaction')}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-br from-primary to-[#06B6D4] rounded-full flex items-center justify-center shadow-lg shadow-primary/50 hover:scale-110 transition-transform z-40"
-      >
-        <Plus size={28} className="text-white" />
-      </button>
-
-      <BottomNav />
+      <FintechBottomNav />
     </div>
   );
 }

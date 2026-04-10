@@ -1,106 +1,103 @@
-import React from 'react';
-import { Plus, TrendingUp } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Progress } from '../components/ui/progress';
-import { BottomNav } from '../components/BottomNav';
+import React, { useMemo, useState } from 'react';
+import { CirclePlus, ShieldCheck } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
+import { CurrencySwitch, FintechBackdrop, ProgressTrack } from '../components/fintech/FintechElements';
+import { FintechBottomNav } from '../components/fintech/FintechBottomNav';
 import { getCategoryById } from '../data/categories';
 
 export function Budgets() {
-  const mockBudgets = useFinanceStore((state) => state.budgets); // Using the same variable name to avoid editing multiple lines
+  const [currency, setCurrency] = useState<'RDS' | 'US$'>('RDS');
+  const budgets = useFinanceStore((state) => state.budgets);
+
+  const summary = useMemo(() => {
+    const total = budgets.reduce((sum, b) => sum + b.limit, 0);
+    const spent = budgets.reduce((sum, b) => sum + b.spent, 0);
+    return {
+      total,
+      spent,
+      available: total - spent,
+      used: total ? (spent / total) * 100 : 0,
+    };
+  }, [budgets]);
+
+  const formatAmount = (amount: number) => {
+    const value = currency === 'US$' ? amount / 58 : amount;
+    return `${currency === 'US$' ? 'US$' : 'RD$'}${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="bg-card border-b border-border px-6 py-6">
-        <h1 className="text-2xl font-bold mb-2">Presupuestos</h1>
-        <p className="text-sm text-muted-foreground">Controla tus límites mensuales</p>
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#f4f7f6] pb-28 text-slate-900">
+      <FintechBackdrop />
 
-      {/* Monthly Summary */}
-      <div className="px-6 py-4">
-        <div className="bg-gradient-to-br from-primary to-[#06B6D4] rounded-3xl p-6 mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={20} className="text-white" />
-            <p className="text-white/80 text-sm">Total presupuestado</p>
+      <header className="relative rounded-b-[30px] bg-gradient-to-br from-[#1FA971] to-[#22C55E] px-5 pb-7 pt-12 text-white shadow-[0_20px_45px_rgba(0,0,0,0.18)]">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-5xl font-black">Límites</h1>
+            <p className="mt-1 text-white/80">Define cuánto quieres gastar</p>
           </div>
-          <h2 className="text-white text-3xl font-bold mb-4">
-            ${mockBudgets.reduce((sum, b) => sum + b.limit, 0).toLocaleString()}
-          </h2>
-          <div className="flex items-center gap-4 text-sm text-white/90">
-            <div>
-              <span className="text-white/60">Gastado: </span>
-              ${mockBudgets.reduce((sum, b) => sum + b.spent, 0).toLocaleString()}
-            </div>
-            <div>
-              <span className="text-white/60">Restante: </span>
-              ${mockBudgets.reduce((sum, b) => sum + (b.limit - b.spent), 0).toLocaleString()}
-            </div>
+          <div className="flex items-center gap-2">
+            <CurrencySwitch active={currency} onChange={setCurrency} />
+            <button className="rounded-full border border-white/45 bg-white/20 p-2.5"><CirclePlus size={18} /></button>
           </div>
         </div>
+      </header>
 
-        {/* Budget Cards */}
-        <div className="space-y-4">
-          {mockBudgets.map(budget => {
-            const category = getCategoryById(budget.category);
-            const Icon = category?.icon;
-            const percentage = (budget.spent / budget.limit) * 100;
-            const remaining = budget.limit - budget.spent;
-            const isOverBudget = percentage > 100;
+      <main className="relative space-y-5 px-5 pt-5">
+        <section className="rounded-[26px] bg-gradient-to-br from-[#1FA971] to-[#3dd9a4] p-6 text-white shadow-[0_15px_38px_rgba(16,185,129,0.35)]">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} />
+              <p className="text-xs font-semibold uppercase tracking-[0.2em]">Resumen mensual</p>
+            </div>
+            <p className="rounded-full bg-white/20 px-3 py-1 text-sm font-bold">{summary.used.toFixed(0)}%</p>
+          </div>
+          <p className="text-sm text-white/85">Presupuesto total</p>
+          <p className="text-5xl font-black">{formatAmount(summary.total)}</p>
+          <div className="my-4 h-px bg-white/25" />
+          <div className="space-y-1">
+            <p className="text-2xl font-bold">Gastado {formatAmount(summary.spent)}</p>
+            <p className="text-2xl font-bold text-emerald-50">Disponible {formatAmount(summary.available)}</p>
+          </div>
+        </section>
 
-            return (
-              <div key={budget.id} className="bg-card rounded-2xl p-5 border border-border">
-                <div className="flex items-start gap-4 mb-4">
-                  {Icon && (
-                    <div 
-                      className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: `${category?.color}20` }}
-                    >
-                      <Icon size={24} style={{ color: category?.color }} />
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Tus límites activos</h2>
+            <p className="font-bold text-[#1FA971]">{budgets.length} límites</p>
+          </div>
+
+          <div className="space-y-4">
+            {budgets.map((budget) => {
+              const category = getCategoryById(budget.category);
+              const used = budget.limit ? (budget.spent / budget.limit) * 100 : 0;
+              const left = budget.limit - budget.spent;
+              return (
+                <article key={budget.id} className="rounded-[24px] bg-white p-4 shadow-[0_10px_32px_rgba(15,23,42,0.08)]">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: `${category?.color}20` }}>
+                        <span className="text-xl">🧾</span>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-slate-900">{category?.name || 'Categoría'}</p>
+                        <p className="text-sm text-slate-500">Mensual</p>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">{category?.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      ${budget.spent.toLocaleString()} de ${budget.limit.toLocaleString()}
-                    </p>
+                    <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-[#1FA971]">{used.toFixed(0)}%</p>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-semibold ${
-                      isOverBudget ? 'text-[#EF4444]' : 'text-primary'
-                    }`}>
-                      {percentage.toFixed(0)}%
-                    </p>
+                  <ProgressTrack value={used} tone={used >= 100 ? 'red' : 'green'} />
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <p className="text-slate-500">Gastado <span className="block text-2xl font-black text-slate-900">{formatAmount(budget.spent)}</span></p>
+                    <p className="text-right text-slate-500">Disponible <span className="block text-2xl font-black text-[#1FA971]">{formatAmount(left)}</span></p>
                   </div>
-                </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      </main>
 
-                <Progress 
-                  value={Math.min(percentage, 100)} 
-                  className="h-2 mb-2"
-                />
-
-                <p className={`text-xs ${
-                  isOverBudget ? 'text-[#EF4444]' : 'text-muted-foreground'
-                }`}>
-                  {isOverBudget 
-                    ? `Excedido por $${Math.abs(remaining).toLocaleString()}`
-                    : `Quedan $${remaining.toLocaleString()}`
-                  }
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Add Budget Button */}
-        <Button
-          className="w-full h-14 bg-card hover:bg-muted border-2 border-dashed border-border text-foreground rounded-2xl mt-6"
-        >
-          <Plus size={20} className="mr-2" />
-          Crear nuevo presupuesto
-        </Button>
-      </div>
-
-      <BottomNav />
+      <FintechBottomNav />
     </div>
   );
 }
