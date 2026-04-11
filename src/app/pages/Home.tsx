@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Wallet, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { TransactionCard } from '../components/TransactionCard';
@@ -10,11 +10,21 @@ import { useFinanceStore } from '../store/useFinanceStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { getCategoryById } from '../data/categories';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
 
 export function Home() {
   const navigate = useNavigate();
   const transactions = useFinanceStore((state) => state.transactions);
   const displayName = useAuthStore((state) => state.displayName);
+  const savingsGoal = useFinanceStore((state) => state.savingsGoal);
+  const categoryColors = useFinanceStore((state) => state.categoryColors);
+  const updateSavingsGoal = useFinanceStore((state) => state.updateSavingsGoal);
+  const updateCategoryColor = useFinanceStore((state) => state.updateCategoryColor);
+
+  const [showGoalModal, setShowGoalModal] = React.useState(false);
+  const [tempGoal, setTempGoal] = React.useState('');
+  const [showColorModal, setShowColorModal] = React.useState(false);
 
   const totalIncome = transactions
     .filter(t => t.type === 'income')
@@ -39,13 +49,19 @@ export function Home() {
       return acc;
     }, {} as Record<string, number>);
 
-  const chartData = Object.entries(expenseByCategory).map(([name, value]) => ({
-    name,
-    value,
-    color: getCategoryById(
+  const chartData = Object.entries(expenseByCategory).map(([name, value]) => {
+    const defaultColor = getCategoryById(
       transactions.find(t => getCategoryById(t.category)?.name === name)?.category || ''
-    )?.color || '#10B981'
-  }));
+    )?.color || '#10B981';
+    
+    const categoryId = transactions.find(t => getCategoryById(t.category)?.name === name)?.category || '';
+    return {
+      name,
+      value,
+      categoryId,
+      color: categoryColors[categoryId] || defaultColor
+    };
+  });
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -79,20 +95,27 @@ export function Home() {
             iconColor="#10B981"
             iconBgColor="#10B98120"
           />
-          <StatCard
-            icon={TrendingDown}
-            label="Ahorro"
-            value={`$${balance.toLocaleString()}`}
-            iconColor="#8B5CF6"
-            iconBgColor="#8B5CF620"
-          />
+          <button onClick={() => setShowGoalModal(true)} className="text-left w-full">
+            <StatCard
+              icon={TrendingDown}
+              label={`Ahorro${savingsGoal > 0 ? ` (Meta: $${savingsGoal.toLocaleString()})` : ''}`}
+              value={`$${balance.toLocaleString()}`}
+              iconColor="#8B5CF6"
+              iconBgColor="#8B5CF620"
+            />
+          </button>
         </div>
       </div>
 
       {/* Gastos por categoría */}
       <div className="px-6 mb-6">
         <div className="bg-card rounded-2xl p-6 border border-border">
-          <h3 className="font-semibold mb-4">Gastos por categoría</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Gastos por categoría</h3>
+            <button onClick={() => setShowColorModal(true)} className="p-1 rounded-full hover:bg-black/5 text-muted-foreground">
+              <MoreVertical size={16} />
+            </button>
+          </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -150,6 +173,64 @@ export function Home() {
       </button>
 
       <BottomNav />
+
+      {/* Modals */}
+      <Dialog open={showGoalModal} onOpenChange={setShowGoalModal}>
+        <DialogContent className="max-w-xs sm:max-w-sm rounded-[24px]">
+          <DialogHeader>
+            <DialogTitle>Establecer meta de ahorro</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input 
+              type="number" 
+              value={tempGoal} 
+              onChange={e => setTempGoal(e.target.value)} 
+              placeholder="Ej. 10000" 
+              className="text-lg"
+            />
+            <Button 
+              className="w-full text-base py-5 rounded-xl"
+              onClick={() => { 
+                updateSavingsGoal(Number(tempGoal)); 
+                setShowGoalModal(false); 
+              }}
+            >
+              Guardar Meta
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showColorModal} onOpenChange={setShowColorModal}>
+        <DialogContent className="max-w-xs sm:max-w-sm rounded-[24px]">
+          <DialogHeader>
+            <DialogTitle>Editar Colores de Categoría</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 pt-4 max-h-[60vh] overflow-y-auto pr-2">
+            {Array.from(new Set(transactions.filter(t => t.type === 'expense').map(t => t.category))).map(catId => {
+              const category = getCategoryById(catId);
+              if (!category) return null;
+              const currentColor = categoryColors[catId] || category.color;
+              return (
+                <div key={catId} className="flex items-center justify-between p-2 rounded-lg bg-black/5">
+                  <span className="font-medium">{category.name}</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="color" 
+                      value={currentColor} 
+                      onChange={e => updateCategoryColor(catId, e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {transactions.filter(t => t.type === 'expense').length === 0 && (
+              <p className="text-muted-foreground text-sm text-center py-4">No tienes gastos registrados.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

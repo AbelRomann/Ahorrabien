@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, 
 export function Reports() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
   const transactions = useFinanceStore((state) => state.transactions);
+  const categoryColors = useFinanceStore((state) => state.categoryColors);
 
   // Expense by category
   const expenseByCategory = transactions
@@ -22,7 +23,7 @@ export function Reports() {
           acc.push({
             name: category.name,
             value: t.amount,
-            color: category.color
+            color: categoryColors[category.id] || category.color
           });
         }
       }
@@ -32,13 +33,30 @@ export function Reports() {
   // Sort by value
   expenseByCategory.sort((a, b) => b.value - a.value);
 
-  // Monthly expenses (mock data for demo)
-  const monthlyData = [
-    { month: 'Ene', gastos: 4200, ingresos: 35000 },
-    { month: 'Feb', gastos: 3800, ingresos: 35000 },
-    { month: 'Mar', gastos: 5100, ingresos: 35000 },
-    { month: 'Abr', gastos: 3880, ingresos: 35000 },
-  ];
+  // Monthly expenses - Real data
+  const getLast4Months = () => {
+    const result = [];
+    const now = new Date();
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const startOfMonth = d.getTime();
+      const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+
+      const monthLabel = d.toLocaleString('es-DO', { month: 'short' });
+      const monthTx = transactions.filter(t => {
+        const txTime = new Date(t.date).getTime();
+        return txTime >= startOfMonth && txTime <= endOfMonth;
+      });
+
+      const gastos = monthTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const ingresos = monthTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+
+      result.push({ month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1), gastos, ingresos });
+    }
+    return result;
+  };
+
+  const monthlyData = getLast4Months();
 
   const totalExpenses = expenseByCategory.reduce((sum, cat) => sum + cat.value, 0);
   const topCategory = expenseByCategory[0];

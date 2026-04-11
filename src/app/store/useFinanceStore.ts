@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Preferences } from '@capacitor/preferences';
 import { Transaction, Budget } from '../data/types';
 import { dbService } from '../services/database';
 
@@ -13,6 +14,10 @@ interface FinanceState {
   deleteTransaction: (id: string) => Promise<void>;
   addBudget: (budget: Budget) => Promise<void>;
   updateBudget: (budget: Budget) => Promise<void>;
+  savingsGoal: number;
+  categoryColors: Record<string, string>;
+  updateSavingsGoal: (goal: number) => Promise<void>;
+  updateCategoryColor: (categoryId: string, color: string) => Promise<void>;
 }
 
 export const useFinanceStore = create<FinanceState>((set) => ({
@@ -20,6 +25,8 @@ export const useFinanceStore = create<FinanceState>((set) => ({
   budgets: [],
   isLoading: true,
   error: null,
+  savingsGoal: 0,
+  categoryColors: {},
 
   loadData: async () => {
     try {
@@ -27,7 +34,14 @@ export const useFinanceStore = create<FinanceState>((set) => ({
       await dbService.init();
       const transactions = await dbService.getTransactions();
       const budgets = await dbService.getBudgets();
-      set({ transactions, budgets, isLoading: false });
+      
+      const goalRes = await Preferences.get({ key: 'savings_goal' });
+      const colorsRes = await Preferences.get({ key: 'category_colors' });
+      
+      const savingsGoal = goalRes.value ? parseFloat(goalRes.value) : 0;
+      const categoryColors = colorsRes.value ? JSON.parse(colorsRes.value) : {};
+
+      set({ transactions, budgets, savingsGoal, categoryColors, isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       console.error('Failed to load data', error);
@@ -167,6 +181,27 @@ export const useFinanceStore = create<FinanceState>((set) => ({
       set((state) => ({
         budgets: state.budgets.map((b) => (b.id === budget.id ? budget : b)),
       }));
+    } catch (error: any) {
+      set({ error: error.message });
+    }
+  },
+
+  updateSavingsGoal: async (goal: number) => {
+    try {
+      await Preferences.set({ key: 'savings_goal', value: goal.toString() });
+      set({ savingsGoal: goal });
+    } catch (error: any) {
+      set({ error: error.message });
+    }
+  },
+
+  updateCategoryColor: async (categoryId: string, color: string) => {
+    try {
+      set((state) => {
+        const newColors = { ...state.categoryColors, [categoryId]: color };
+        Preferences.set({ key: 'category_colors', value: JSON.stringify(newColors) }).catch(console.error);
+        return { categoryColors: newColors };
+      });
     } catch (error: any) {
       set({ error: error.message });
     }
