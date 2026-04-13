@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, TrendingUp, TrendingDown, Wallet, MoreVertical } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
 import { TransactionCard } from '../components/TransactionCard';
@@ -95,7 +96,13 @@ export function Home() {
             iconColor="#10B981"
             iconBgColor="#10B98120"
           />
-          <button onClick={() => setShowGoalModal(true)} className="text-left w-full">
+          <button 
+            onClick={() => {
+              Haptics.impact({ style: ImpactStyle.Light });
+              setShowGoalModal(true);
+            }} 
+            className="text-left w-full"
+          >
             <StatCard
               icon={TrendingDown}
               label={`Ahorro${savingsGoal > 0 ? ` (Meta: $${savingsGoal.toLocaleString()})` : ''}`}
@@ -112,7 +119,13 @@ export function Home() {
         <div className="bg-card rounded-2xl p-6 border border-border">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold">Gastos por categoría</h3>
-            <button onClick={() => setShowColorModal(true)} className="p-1 rounded-full hover:bg-black/5 text-muted-foreground">
+            <button 
+              onClick={() => {
+                Haptics.impact({ style: ImpactStyle.Light });
+                setShowColorModal(true);
+              }} 
+              className="p-1 rounded-full hover:bg-black/5 text-muted-foreground"
+            >
               <MoreVertical size={16} />
             </button>
           </div>
@@ -127,6 +140,8 @@ export function Home() {
                   outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
+                  labelLine={false}
+                  label={({ percent }) => percent > 0 ? `${(percent * 100).toFixed(0)}%` : ""}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -151,7 +166,10 @@ export function Home() {
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold">Últimos movimientos</h3>
           <button 
-            onClick={() => navigate('/history')}
+            onClick={() => {
+              Haptics.impact({ style: ImpactStyle.Light });
+              navigate('/history');
+            }}
             className="text-sm text-primary hover:underline"
           >
             Ver todos
@@ -166,7 +184,10 @@ export function Home() {
 
       {/* Floating Action Button */}
       <button
-        onClick={() => navigate('/add-transaction')}
+        onClick={() => {
+          Haptics.impact({ style: ImpactStyle.Medium });
+          navigate('/add-transaction');
+        }}
         className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-br from-primary to-[#06B6D4] rounded-full flex items-center justify-center shadow-lg shadow-primary/50 hover:scale-110 transition-transform z-40"
       >
         <Plus size={28} className="text-white" />

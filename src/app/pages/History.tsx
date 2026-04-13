@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, Calendar } from 'lucide-react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Input } from '../components/ui/input';
 import { TransactionCard } from '../components/TransactionCard';
 import { BottomNav } from '../components/BottomNav';
@@ -47,7 +48,10 @@ export function History() {
             className="pl-12 pr-12 h-12 bg-background border-border rounded-2xl"
           />
           <button
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => {
+              Haptics.impact({ style: ImpactStyle.Light });
+              setShowFilters(!showFilters);
+            }}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
           >
             <SlidersHorizontal size={20} />
@@ -58,7 +62,10 @@ export function History() {
         {showFilters && (
           <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
             <button
-              onClick={() => setFilterType('all')}
+              onClick={() => {
+                Haptics.impact({ style: ImpactStyle.Light });
+                setFilterType('all');
+              }}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                 filterType === 'all'
                   ? 'bg-primary text-white'
@@ -68,7 +75,10 @@ export function History() {
               Todos
             </button>
             <button
-              onClick={() => setFilterType('income')}
+              onClick={() => {
+                Haptics.impact({ style: ImpactStyle.Light });
+                setFilterType('income');
+              }}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                 filterType === 'income'
                   ? 'bg-[#22C55E] text-white'
@@ -78,7 +88,10 @@ export function History() {
               Ingresos
             </button>
             <button
-              onClick={() => setFilterType('expense')}
+              onClick={() => {
+                Haptics.impact({ style: ImpactStyle.Light });
+                setFilterType('expense');
+              }}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
                 filterType === 'expense'
                   ? 'bg-[#EF4444] text-white'

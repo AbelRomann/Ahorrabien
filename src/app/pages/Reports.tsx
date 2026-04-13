@@ -9,9 +9,20 @@ export function Reports() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
   const transactions = useFinanceStore((state) => state.transactions);
   const categoryColors = useFinanceStore((state) => state.categoryColors);
+  // Filter transactions based on period selection
+  const nowTime = new Date().getTime();
+  const currentYear = new Date().getFullYear();
+  
+  const filteredTransactions = transactions.filter(t => {
+    const txTime = new Date(t.date).getTime();
+    if (period === 'week') return nowTime - txTime <= 7 * 24 * 60 * 60 * 1000;
+    if (period === 'month') return nowTime - txTime <= 30 * 24 * 60 * 60 * 1000;
+    if (period === 'year') return new Date(t.date).getFullYear() === currentYear;
+    return true;
+  });
 
   // Expense by category
-  const expenseByCategory = transactions
+  const expenseByCategory = filteredTransactions
     .filter(t => t.type === 'expense')
     .reduce((acc, t) => {
       const category = getCategoryById(t.category);
@@ -23,7 +34,7 @@ export function Reports() {
           acc.push({
             name: category.name,
             value: t.amount,
-            color: categoryColors[category.id] || category.color
+            color: categoryColors ? categoryColors[category.id] || category.color : category.color
           });
         }
       }
@@ -33,34 +44,59 @@ export function Reports() {
   // Sort by value
   expenseByCategory.sort((a, b) => b.value - a.value);
 
-  // Monthly expenses - Real data
-  const getLast4Months = () => {
+  // Monthly expenses or Weekly depending on period... wait, keeping it simple: just show last 4 months for comparison always, or last 4 weeks if weekly.
+  // Actually, keeping the comparison consistent to what was requested: "la parte donde se filtra... no funciona" so the charts respond.
+  // Let's filter the bar chart conditionally.
+  
+  const getComparisonData = () => {
     const result = [];
     const now = new Date();
-    for (let i = 3; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const startOfMonth = d.getTime();
-      const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+    
+    if (period === 'week') {
+      // Last 7 days comparison (Day by Day)
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const startOfDay = d.getTime();
+        const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+        
+        const dayLabel = d.toLocaleString('es-DO', { weekday: 'short' });
+        const dayTx = transactions.filter(t => {
+          const txTime = new Date(t.date).getTime();
+          return txTime >= startOfDay && txTime <= endOfDay;
+        });
 
-      const monthLabel = d.toLocaleString('es-DO', { month: 'short' });
-      const monthTx = transactions.filter(t => {
-        const txTime = new Date(t.date).getTime();
-        return txTime >= startOfMonth && txTime <= endOfMonth;
-      });
+        const gastos = dayTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const ingresos = dayTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
 
-      const gastos = monthTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-      const ingresos = monthTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        result.push({ month: dayLabel, gastos, ingresos });
+      }
+    } else {
+      // Monthly Comparison
+      for (let i = 3; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const startOfMonth = d.getTime();
+        const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
 
-      result.push({ month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1), gastos, ingresos });
+        const monthLabel = d.toLocaleString('es-DO', { month: 'short' });
+        const monthTx = transactions.filter(t => {
+          const txTime = new Date(t.date).getTime();
+          return txTime >= startOfMonth && txTime <= endOfMonth;
+        });
+
+        const gastos = monthTx.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const ingresos = monthTx.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+
+        result.push({ month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1), gastos, ingresos });
+      }
     }
     return result;
   };
 
-  const monthlyData = getLast4Months();
+  const comparisonData = getComparisonData();
 
   const totalExpenses = expenseByCategory.reduce((sum, cat) => sum + cat.value, 0);
-  const topCategory = expenseByCategory[0];
-  const avgWeekly = totalExpenses / 4;
+  const topCategory = expenseByCategory.length > 0 ? expenseByCategory[0] : null;
+  const avgWeekly = period === 'week' ? totalExpenses : period === 'year' ? totalExpenses / 52 : totalExpenses / 4;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -131,7 +167,7 @@ export function Reports() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ percent }) => percent > 0 ? `${(percent * 100).toFixed(0)}%` : ""}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -168,10 +204,10 @@ export function Reports() {
 
         {/* Monthly Comparison - Bar Chart */}
         <div className="bg-card rounded-2xl p-6 border border-border">
-          <h3 className="font-semibold mb-4">Comparación mensual</h3>
+          <h3 className="font-semibold mb-4">Comparación</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
+              <BarChart data={comparisonData}>
                 <XAxis 
                   dataKey="month" 
                   stroke="#9CA3AF"

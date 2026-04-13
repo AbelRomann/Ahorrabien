@@ -11,7 +11,8 @@ import {
   Settings,
   PieChart,
   Check,
-  X
+  X,
+  CalendarClock
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { BottomNav } from '../components/BottomNav';
@@ -62,6 +63,7 @@ export function Profile() {
   const menuItems = [
     { icon: User, label: 'Editar perfil', action: () => setIsEditing(true) },
     { icon: PieChart, label: 'Presupuestos', action: () => navigate('/budgets') },
+    { icon: CalendarClock, label: 'Pagos automáticos', action: () => navigate('/auto-transactions') },
     { icon: DollarSign, label: 'Cambiar moneda', action: () => {}, detail: 'DOP' },
     { icon: Moon, label: 'Modo oscuro', action: () => {}, toggle: true, enabled: true },
     { icon: Bell, label: 'Notificaciones', action: () => {}, toggle: true, enabled: false },
@@ -79,7 +81,7 @@ export function Profile() {
           </div>
           
           {isEditing ? (
-             <div className="w-full max-w-xs space-y-3 bg-white/10 p-4 rounded-xl backdrop-blur-md border border-white/20 animate-in fade-in duration-200">
+             <div className="w-full max-w-xs space-y-3 bg-white/10 p-4 rounded-xl backdrop-blur-md border border-white/20">
                 <Input 
                    value={editName}
                    onChange={e => setEditName(e.target.value)}
@@ -95,13 +97,13 @@ export function Profile() {
                 <div className="flex gap-2">
                    <button 
                      onClick={() => setIsEditing(false)}
-                     className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg flex justify-center items-center gap-1 transition-colors"
+                     className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg flex justify-center items-center gap-1"
                    >
                      <X size={16}/> Cancelar
                    </button>
                    <button 
                      onClick={handleSaveProfile}
-                     className="flex-1 bg-white hover:bg-white/90 text-primary py-2 rounded-lg font-semibold flex justify-center items-center gap-1 transition-colors"
+                     className="flex-1 bg-white hover:bg-white/90 text-primary py-2 rounded-lg font-semibold flex justify-center items-center gap-1"
                    >
                      <Check size={16}/> Guardar
                    </button>

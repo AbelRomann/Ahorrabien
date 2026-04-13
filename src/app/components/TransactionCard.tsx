@@ -72,17 +72,17 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
 
       {/* Expanded Actions */}
       {expanded && (
-        <div className="flex bg-muted/20 border-t border-border p-2 px-4 justify-end gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="flex bg-muted/20 border-t border-border p-2 px-4 justify-end gap-2">
           <button 
             onClick={handleEdit}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-colors font-medium"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded-xl font-medium"
           >
             <Edit2 size={16} />
             Editar
           </button>
           <button 
             onClick={handleDelete}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-xl transition-colors font-medium"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-xl font-medium"
           >
             <Trash2 size={16} />
             Borrar

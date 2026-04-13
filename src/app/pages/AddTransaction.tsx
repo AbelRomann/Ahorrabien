@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Calendar, DollarSign, FileText, CreditCard } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, FileText, CreditCard, RefreshCw, Clock } from 'lucide-react';
+import { Switch } from '../components/ui/switch';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { CategoryChip } from '../components/CategoryChip';
@@ -16,8 +18,11 @@ export function AddTransaction() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
 
   const addTransaction = useFinanceStore((state) => state.addTransaction);
+  const addRecurring = useFinanceStore((state) => state.addRecurring);
 
   const filteredCategories = categories.filter(
     c => c.type === type || c.type === 'both'
@@ -25,6 +30,7 @@ export function AddTransaction() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    Haptics.impact({ style: ImpactStyle.Medium });
     if (!amount || !selectedCategory) {
       toast.error('Por favor completa todos los campos requeridos');
       return;
@@ -39,6 +45,27 @@ export function AddTransaction() {
       date,
       paymentMethod
     });
+
+    if (isRecurring) {
+       // Also add as a template for the future
+       const nextDate = new Date(date);
+       if (frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+       else if (frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+       else if (frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+       else if (frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+
+       await addRecurring({
+          id: crypto.randomUUID(),
+          type,
+          amount: parseFloat(amount),
+          category: selectedCategory,
+          description: description || `Auto: ${type === 'expense' ? 'Gasto' : 'Ingreso'}`,
+          frequency,
+          next_date: nextDate.toISOString(),
+          paymentMethod
+       });
+       toast.info('Automatización programada correctamente');
+    }
 
     toast.success('Movimiento guardado exitosamente');
     setTimeout(() => navigate('/home'), 1000);
@@ -61,7 +88,10 @@ export function AddTransaction() {
         <div className="flex gap-3 mb-6">
           <button
             type="button"
-            onClick={() => setType('expense')}
+            onClick={() => {
+              Haptics.impact({ style: ImpactStyle.Light });
+              setType('expense');
+            }}
             className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
               type === 'expense'
                 ? 'bg-[#EF4444] text-white'
@@ -72,7 +102,10 @@ export function AddTransaction() {
           </button>
           <button
             type="button"
-            onClick={() => setType('income')}
+            onClick={() => {
+              Haptics.impact({ style: ImpactStyle.Light });
+              setType('income');
+            }}
             className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
               type === 'income'
                 ? 'bg-[#22C55E] text-white'
@@ -110,7 +143,10 @@ export function AddTransaction() {
                 icon={category.icon}
                 color={category.color}
                 selected={selectedCategory === category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => {
+                  Haptics.impact({ style: ImpactStyle.Light });
+                  setSelectedCategory(category.id);
+                }}
               />
             ))}
           </div>
@@ -159,6 +195,59 @@ export function AddTransaction() {
               className="w-full pl-12 pr-4 py-3 bg-card border border-border rounded-2xl text-foreground resize-none h-24"
             />
           </div>
+        </div>
+
+        {/* Recurring Toggle */}
+        <div className="mb-6 bg-card border border-border rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3 text-foreground">
+              <RefreshCw size={20} className={isRecurring ? "text-primary animate-spin-slow" : "text-muted-foreground"} />
+              <div>
+                <p className="font-semibold text-sm">Hacer recurrente</p>
+                <p className="text-xs text-muted-foreground">Se cobrará automáticamente en el futuro</p>
+              </div>
+            </div>
+            <Switch 
+              checked={isRecurring} 
+              onCheckedChange={(checked) => {
+                Haptics.impact({ style: ImpactStyle.Light });
+                setIsRecurring(checked);
+              }}
+            />
+          </div>
+
+          {isRecurring && (
+            <div className="mt-4 pt-4 border-t border-border space-y-4">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-2 block uppercase">¿Cada cuánto tiempo?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'daily', label: 'Diario' },
+                    { id: 'weekly', label: 'Semanal' },
+                    { id: 'monthly', label: 'Mensual' },
+                    { id: 'yearly', label: 'Anual' }
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setFrequency(f.id as any)}
+                      className={`py-2 px-3 rounded-xl text-sm font-medium border transition-all ${
+                        frequency === f.id 
+                          ? 'bg-primary/10 border-primary text-primary' 
+                          : 'bg-background border-border text-muted-foreground'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-primary/70 bg-primary/5 p-2 rounded-lg">
+                <Clock size={12} />
+                <span>El primer cobro automático será el próximo periodo después de la fecha elegida.</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submit Button */}

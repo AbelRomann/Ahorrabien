@@ -14,3 +14,14 @@ export interface Budget {
   limit: number;
   spent: number;
 }
+
+export interface RecurringTransaction {
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  category: string;
+  description: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  next_date: string; // ISO String to easily determine when payment is due
+  paymentMethod: string;
+}
