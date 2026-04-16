@@ -19,7 +19,7 @@ export function AddTransaction() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState('Tarjeta');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'>('monthly');
 
   const addTransaction = useFinanceStore((state) => state.addTransaction);
   const addRecurring = useFinanceStore((state) => state.addRecurring);
@@ -51,6 +51,7 @@ export function AddTransaction() {
        const nextDate = new Date(date);
        if (frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
        else if (frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+       else if (frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
        else if (frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
        else if (frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
 
@@ -222,10 +223,11 @@ export function AddTransaction() {
                 <label className="text-xs font-bold text-muted-foreground mb-2 block uppercase">¿Cada cuánto tiempo?</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'daily', label: 'Diario' },
-                    { id: 'weekly', label: 'Semanal' },
-                    { id: 'monthly', label: 'Mensual' },
-                    { id: 'yearly', label: 'Anual' }
+                    { id: 'daily',    label: 'Diario' },
+                    { id: 'weekly',   label: 'Semanal' },
+                    { id: 'biweekly', label: 'Quincenal' },
+                    { id: 'monthly',  label: 'Mensual' },
+                    { id: 'yearly',   label: 'Anual' }
                   ].map((f) => (
                     <button
                       key={f.id}

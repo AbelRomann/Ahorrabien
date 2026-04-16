@@ -1,21 +1,30 @@
-import { createBrowserRouter, Outlet, useLocation } from 'react-router';
-// Removed framer-motion imports to keep the transitions snappy and static
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Outlet } from 'react-router';
+// Static imports for critical first-render routes
 import { SplashScreen } from './pages/SplashScreen';
 import { Login } from './pages/Login';
 import { Home } from './pages/Home';
 import { AddTransaction } from './pages/AddTransaction';
 import { EditTransaction } from './pages/EditTransaction';
-import { History } from './pages/History';
-import { Budgets } from './pages/Budgets';
-import { Reports } from './pages/Reports';
-import { Profile } from './pages/Profile';
-import { AutoTransactions } from './pages/AutoTransactions';
-import { DesignSystem } from './pages/DesignSystem';
+
+// Lazy imports for secondary routes — loaded on demand
+const History = lazy(() => import('./pages/History').then(m => ({ default: m.History })));
+const Budgets = lazy(() => import('./pages/Budgets').then(m => ({ default: m.Budgets })));
+const Reports = lazy(() => import('./pages/Reports').then(m => ({ default: m.Reports })));
+const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
+const AutoTransactions = lazy(() => import('./pages/AutoTransactions').then(m => ({ default: m.AutoTransactions })));
+const DesignSystem = lazy(() => import('./pages/DesignSystem').then(m => ({ default: m.DesignSystem })));
+
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-background animate-pulse" />
+);
 
 const PageTransitionLayout = () => {
   return (
     <div className="w-full min-h-screen">
-      <Outlet />
+      <Suspense fallback={<LoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 };
@@ -71,4 +80,4 @@ export const router = createBrowserRouter([
       },
     ]
   }
-]);
+]);

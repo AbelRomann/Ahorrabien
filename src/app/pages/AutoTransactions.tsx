@@ -24,7 +24,7 @@ export function AutoTransactions() {
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
-  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'>('monthly');
 
   const handleSave = () => {
     if (!amount || !categoryId || !frequency) return;
@@ -36,6 +36,7 @@ export function AutoTransactions() {
     // Set next date based on frequency
     if (frequency === 'daily') nextDate.setDate(now.getDate() + 1);
     else if (frequency === 'weekly') nextDate.setDate(now.getDate() + 7);
+    else if (frequency === 'biweekly') nextDate.setDate(now.getDate() + 14);
     else if (frequency === 'monthly') nextDate.setMonth(now.getMonth() + 1);
     else if (frequency === 'yearly') nextDate.setFullYear(now.getFullYear() + 1);
 
@@ -61,6 +62,7 @@ export function AutoTransactions() {
     switch (freq) {
       case 'daily': return 'Diario';
       case 'weekly': return 'Semanal';
+      case 'biweekly': return 'Quincenal';
       case 'monthly': return 'Mensual';
       case 'yearly': return 'Anual';
       default: return freq;
@@ -184,6 +186,7 @@ export function AutoTransactions() {
               <SelectContent>
                 <SelectItem value="daily">Diariamente</SelectItem>
                 <SelectItem value="weekly">Semanalmente</SelectItem>
+                <SelectItem value="biweekly">Quincenalmente</SelectItem>
                 <SelectItem value="monthly">Mensualmente</SelectItem>
                 <SelectItem value="yearly">Anualmente</SelectItem>
               </SelectContent>

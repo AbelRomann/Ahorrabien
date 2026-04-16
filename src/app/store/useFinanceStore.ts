@@ -2,6 +2,41 @@ import { create } from 'zustand';
 import { Preferences } from '@capacitor/preferences';
 import { Transaction, Budget, RecurringTransaction } from '../data/types';
 import { dbService } from '../services/database';
+import { toast } from 'sonner';
+
+// --- Budget Alert Engine ---
+const ALERTED_KEY = 'budget_alerts_session';
+
+const checkBudgetAlerts = async (budgets: Budget[], categoryNames: Record<string, string>) => {
+  const sessionRes = await Preferences.get({ key: ALERTED_KEY });
+  const alerted: Record<string, number> = sessionRes.value ? JSON.parse(sessionRes.value) : {};
+  let changed = false;
+
+  for (const b of budgets) {
+    if (b.limit <= 0) continue;
+    const pct = (b.spent / b.limit) * 100;
+    const name = categoryNames[b.category] ?? b.category;
+    const prev = alerted[b.id] ?? 0;
+
+    if (pct >= 100 && prev < 100) {
+      toast.error(`🚨 Presupuesto de ${name} agotado (100%)`);
+      alerted[b.id] = 100;
+      changed = true;
+    } else if (pct >= 90 && prev < 90) {
+      toast.warning(`⚠️ ${name}: 90% del presupuesto usado`);
+      alerted[b.id] = 90;
+      changed = true;
+    } else if (pct >= 70 && prev < 70) {
+      toast.warning(`📊 ${name}: 70% del presupuesto usado`);
+      alerted[b.id] = 70;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    await Preferences.set({ key: ALERTED_KEY, value: JSON.stringify(alerted) });
+  }
+};
 
 interface FinanceState {
   transactions: Transaction[];
@@ -75,6 +110,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           // Increment the nextDate
           if (rt.frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
           else if (rt.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+          else if (rt.frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
           else if (rt.frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
           else if (rt.frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
         }
@@ -120,6 +156,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         if (newBudget) {
           updatedBudgets = state.budgets.map(b => b.id === newBudget!.id ? newBudget! : b);
         }
+        // Run budget alerts after state update
+        const categoryNames = updatedBudgets.reduce((acc, b) => ({ ...acc, [b.category]: b.category }), {} as Record<string, string>);
+        checkBudgetAlerts(updatedBudgets, categoryNames).catch(console.error);
         return { 
           transactions: [tx, ...state.transactions],
           budgets: updatedBudgets
