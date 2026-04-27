@@ -18,10 +18,21 @@ export function History() {
   const [singleDate, setSingleDate] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const transactions = useFinanceStore((state) => state.transactions);
 
-  const hasActiveFilters = filterType !== 'all' || dateMode !== 'all';
+  const expenseCategories = useMemo(() => {
+    const cats = new Set<string>();
+    transactions.forEach(t => {
+      if (t.type === 'expense' && t.category) {
+        cats.add(t.category);
+      }
+    });
+    return Array.from(cats).sort();
+  }, [transactions]);
+
+  const hasActiveFilters = filterType !== 'all' || dateMode !== 'all' || selectedCategory !== 'all';
 
   const clearAllFilters = () => {
     setFilterType('all');
@@ -29,6 +40,7 @@ export function History() {
     setSingleDate('');
     setDateFrom('');
     setDateTo('');
+    setSelectedCategory('all');
     Haptics.impact({ style: ImpactStyle.Light });
   };
 
@@ -41,6 +53,9 @@ export function History() {
       // Type filter
       const matchesType = filterType === 'all' || transaction.type === filterType;
 
+      // Category filter
+      const matchesCategory = selectedCategory === 'all' || transaction.category === selectedCategory;
+
       // Date filter
       const txDate = transaction.date.split('T')[0];
       let matchesDate = true;
@@ -51,9 +66,9 @@ export function History() {
         if (dateTo)   matchesDate = matchesDate && txDate <= dateTo;
       }
 
-      return matchesSearch && matchesType && matchesDate;
+      return matchesSearch && matchesType && matchesCategory && matchesDate;
     });
-  }, [transactions, searchTerm, filterType, dateMode, singleDate, dateFrom, dateTo]);
+  }, [transactions, searchTerm, filterType, dateMode, singleDate, dateFrom, dateTo, selectedCategory]);
 
   // Group by date (descending)
   const groupedTransactions = useMemo(() => {
@@ -152,6 +167,31 @@ export function History() {
                 {typeBtn('expense', 'Gastos',   'bg-[#EF4444] text-white')}
               </div>
             </div>
+
+            {/* Category filter */}
+            {(filterType === 'all' || filterType === 'expense') && expenseCategories.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Categoría (Gasto)</p>
+                <div className="relative mb-3">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      Haptics.impact({ style: ImpactStyle.Light });
+                      setSelectedCategory(e.target.value);
+                    }}
+                    className="w-full h-10 px-3 pr-8 bg-background border border-border rounded-xl text-sm appearance-none focus:outline-none focus:border-primary"
+                  >
+                    <option value="all">Todas las categorías</option>
+                    {expenseCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Date mode selector */}
             <div>

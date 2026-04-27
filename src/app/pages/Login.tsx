@@ -35,7 +35,6 @@ export function Login() {
 
   const isLocked = countdown > 0;
 
-  // Load initial lockout state
   useEffect(() => {
     checkPinConfig();
     (async () => {
@@ -48,7 +47,6 @@ export function Login() {
     })();
   }, [checkPinConfig]);
 
-  // Countdown timer
   useEffect(() => {
     if (lockedUntil <= 0) { setCountdown(0); return; }
     const interval = setInterval(() => {
@@ -79,7 +77,6 @@ export function Login() {
     setIsProcessing(true);
 
     if (hasPin) {
-      // Check lockout before even trying
       const locked = await pinLockHelpers.getLockedUntil();
       if (locked > Date.now()) {
         setLockedUntil(locked);
@@ -110,7 +107,6 @@ export function Login() {
         setPin('');
       }
     } else {
-      // Create PIN flow
       if (!confirmStep) {
         setTempPin(currentPin);
         setConfirmStep(true);
@@ -203,7 +199,7 @@ export function Login() {
         ))}
       </div>
 
-      {/* Attempts warning (3-4 failed attempts, not yet locked) */}
+      {/* Attempts warning */}
       {hasPin && failedAttempts >= 3 && !isLocked && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3 mb-4 flex items-center gap-3">
           <AlertTriangle size={18} className="text-amber-500 shrink-0" />

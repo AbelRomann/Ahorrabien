@@ -1,6 +1,6 @@
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection, capSQLiteSet } from '@capacitor-community/sqlite';
 import { Capacitor } from '@capacitor/core';
-import { Transaction, Budget, RecurringTransaction } from '../data/types'; // We'll need to create this
+import { Transaction, Budget, RecurringTransaction } from '../data/types';
 
 const DB_NAME = 'ahorrrard_db';
 
@@ -62,6 +62,11 @@ class DatabaseService {
           frequency TEXT NOT NULL,
           next_date TEXT NOT NULL,
           paymentMethod TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS sync_queue (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          payload TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
       `;
       await this.db.execute(schema);
@@ -204,15 +209,69 @@ class DatabaseService {
         values: [newBudget.limit, newBudget.spent, newBudget.id]
       });
     } else if (newBudget && newBudget.id === oldBudget?.id) {
-       // If it's the exact same budget object reference just updated, the oldBudget block above already overrides it conceptually, but typically we'd just want to apply the final state.
-       // Let's replace the last statement if it's the same budget ID to just reflect the newBudget.
-       set.pop(); // remove oldBudget update
+       set.pop();
        set.push({
         statement: 'UPDATE budgets SET "limit" = ?, spent = ? WHERE id = ?',
         values: [newBudget.limit, newBudget.spent, newBudget.id]
       });
     }
     await this.executeSet(set);
+  }
+
+  // ─── Sync Queue ─────────────────────────────────────────────────────────────
+
+  async enqueueSyncOp(op: object): Promise<void> {
+    if (!this.isReady) await this.init();
+    await this.db.run(
+      "INSERT INTO sync_queue (payload, created_at) VALUES (?, datetime('now'))",
+      [JSON.stringify(op)]
+    );
+  }
+
+  async getPendingSyncOps(): Promise<Array<{ id: number; op: any }>> {
+    if (!this.isReady) await this.init();
+    const res = await this.db.query('SELECT id, payload FROM sync_queue ORDER BY id ASC');
+    return (res.values ?? []).map((r: any) => ({ id: r.id, op: JSON.parse(r.payload) }));
+  }
+
+  async getPendingSyncOpsCount(): Promise<number> {
+    if (!this.isReady) await this.init();
+    const res = await this.db.query('SELECT COUNT(*) as cnt FROM sync_queue');
+    return (res.values?.[0] as any)?.cnt ?? 0;
+  }
+
+  async deleteSyncOp(id: number): Promise<void> {
+    if (!this.isReady) await this.init();
+    await this.db.run('DELETE FROM sync_queue WHERE id = ?', [id]);
+  }
+
+  /** Reemplaza TODA la data local con la que viene de Supabase (pull completo) */
+  async replaceAllData(
+    transactions: Transaction[],
+    budgets: Budget[],
+    recurring: RecurringTransaction[]
+  ): Promise<void> {
+    if (!this.isReady) await this.init();
+
+    const ops: capSQLiteSet[] = [
+      { statement: 'DELETE FROM transactions', values: [] },
+      { statement: 'DELETE FROM budgets', values: [] },
+      { statement: 'DELETE FROM recurring_transactions', values: [] },
+      ...transactions.map(tx => ({
+        statement: 'INSERT INTO transactions (id, type, amount, category, description, date, paymentMethod) VALUES (?,?,?,?,?,?,?)',
+        values: [tx.id, tx.type, tx.amount, tx.category, tx.description, tx.date, tx.paymentMethod],
+      })),
+      ...budgets.map(b => ({
+        statement: 'INSERT INTO budgets (id, category, "limit", spent) VALUES (?,?,?,?)',
+        values: [b.id, b.category, b.limit, b.spent],
+      })),
+      ...recurring.map(rt => ({
+        statement: 'INSERT INTO recurring_transactions (id, type, amount, category, description, frequency, next_date, paymentMethod) VALUES (?,?,?,?,?,?,?,?)',
+        values: [rt.id, rt.type, rt.amount, rt.category, rt.description, rt.frequency, rt.next_date, rt.paymentMethod],
+      })),
+    ];
+
+    await this.db.executeSet(ops);
   }
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, TrendingUp, TrendingDown, Wallet, MoreVertical } from 'lucide-react';
+import { Plus, TrendingDown, Target, Wallet, MoreVertical } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useNavigate } from 'react-router';
 import { Button } from '../components/ui/button';
@@ -7,6 +7,7 @@ import { TransactionCard } from '../components/TransactionCard';
 import { BottomNav } from '../components/BottomNav';
 import { BalanceCard } from '../components/BalanceCard';
 import { StatCard } from '../components/StatCard';
+import { SyncIndicator } from '../components/SyncIndicator';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { getCategoryById } from '../data/categories';
@@ -73,8 +74,11 @@ export function Home() {
             <p className="text-white/80 text-sm">Buenos días,</p>
             <h1 className="text-white text-2xl font-bold">{displayName}</h1>
           </div>
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-            <Wallet size={24} className="text-white" />
+          <div className="flex items-center gap-2">
+            <SyncIndicator />
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <Wallet size={24} className="text-white" />
+            </div>
           </div>
         </div>
 
@@ -90,11 +94,11 @@ export function Home() {
       <div className="px-6 -mt-6 mb-6">
         <div className="grid grid-cols-2 gap-4">
           <StatCard
-            icon={TrendingUp}
+            icon={TrendingDown}
             label="Este mes"
             value={`$${totalExpenses.toLocaleString()}`}
-            iconColor="#10B981"
-            iconBgColor="#10B98120"
+            iconColor="#EF4444"
+            iconBgColor="#EF444420"
           />
           <button 
             onClick={() => {
@@ -104,11 +108,13 @@ export function Home() {
             className="text-left w-full"
           >
             <StatCard
-              icon={TrendingDown}
-              label={`Ahorro${savingsGoal > 0 ? ` (Meta: $${savingsGoal.toLocaleString()})` : ''}`}
+              icon={Target}
+              label={savingsGoal > 0 ? `Meta: $${savingsGoal.toLocaleString()}` : 'Ahorro'}
               value={`$${balance.toLocaleString()}`}
               iconColor="#8B5CF6"
               iconBgColor="#8B5CF620"
+              progress={savingsGoal > 0 ? (balance / savingsGoal) * 100 : undefined}
+              progressLabel={savingsGoal > 0 ? `${Math.min(100, Math.max(0, Math.round((balance / savingsGoal) * 100)))}% de la meta` : undefined}
             />
           </button>
         </div>
