@@ -88,6 +88,10 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       set({ transactions, budgets, recurring, savingsGoal, categoryColors, isLoading: false });
 
       // ── 2. Sync inteligente con Supabase (si hay internet) ───────────────
+      // Drenar cola pendiente ANTES de hacer pull para evitar race condition:
+      // si hay un delete encolado, hay que enviarlo a Supabase primero o el
+      // pull traerá de vuelta la transacción eliminada.
+      await syncService.drainQueue();
       const remote = await syncService.pull();
       if (remote) {
         const remoteHasData = remote.transactions.length > 0 || remote.budgets.length > 0;
