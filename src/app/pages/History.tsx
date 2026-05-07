@@ -6,6 +6,7 @@ import { TransactionCard } from '../components/TransactionCard';
 import { BottomNav } from '../components/BottomNav';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { Transaction } from '../data/types';
+import { formatLongDateLabel, getTransactionDateKey } from '../utils/date';
 
 type FilterType = 'all' | 'income' | 'expense';
 type DateMode = 'all' | 'single' | 'range';
@@ -57,7 +58,7 @@ export function History() {
       const matchesCategory = selectedCategory === 'all' || transaction.category === selectedCategory;
 
       // Date filter
-      const txDate = transaction.date.split('T')[0];
+      const txDate = getTransactionDateKey(transaction.date);
       let matchesDate = true;
       if (dateMode === 'single' && singleDate) {
         matchesDate = txDate === singleDate;
@@ -73,8 +74,7 @@ export function History() {
   // Group by date (descending)
   const groupedTransactions = useMemo(() => {
     return filteredTransactions.reduce((acc, transaction) => {
-      const date = new Date(transaction.date);
-      const key = date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      const key = formatLongDateLabel(transaction.date);
       if (!acc[key]) acc[key] = [];
       acc[key].push(transaction);
       return acc;

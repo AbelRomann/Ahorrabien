@@ -5,6 +5,7 @@ import { Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { toast } from 'sonner';
+import { formatDateLabel } from '../utils/date';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -19,8 +20,7 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    return formatDateLabel(dateStr);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {

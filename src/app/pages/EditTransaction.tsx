@@ -7,6 +7,7 @@ import { CategoryChip } from '../components/CategoryChip';
 import { categories } from '../data/categories';
 import { toast } from 'sonner';
 import { useFinanceStore } from '../store/useFinanceStore';
+import { toDateInputValue } from '../utils/date';
 
 export function EditTransaction() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ export function EditTransaction() {
       setAmount(tx.amount.toString());
       setSelectedCategory(tx.category);
       setDescription(tx.description || '');
-      setDate(tx.date);
+      setDate(toDateInputValue(tx.date));
       setPaymentMethod(tx.paymentMethod);
     } else {
       toast.error('Movimiento no encontrado');

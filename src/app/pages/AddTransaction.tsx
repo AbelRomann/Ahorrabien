@@ -9,6 +9,7 @@ import { CategoryChip } from '../components/CategoryChip';
 import { categories } from '../data/categories';
 import { toast } from 'sonner';
 import { useFinanceStore } from '../store/useFinanceStore';
+import { formatLocalDateForStorage, parseAppDate } from '../utils/date';
 
 export function AddTransaction() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function AddTransaction() {
   const [amount, setAmount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(formatLocalDateForStorage(new Date()));
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'>('monthly');
@@ -48,7 +49,7 @@ export function AddTransaction() {
 
     if (isRecurring) {
        // Also add as a template for the future
-       const nextDate = new Date(date);
+       const nextDate = parseAppDate(date);
        if (frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
        else if (frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
        else if (frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);

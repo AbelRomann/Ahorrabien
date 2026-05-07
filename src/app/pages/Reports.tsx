@@ -4,6 +4,7 @@ import { BottomNav } from '../components/BottomNav';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { getCategoryById } from '../data/categories';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { parseAppDate } from '../utils/date';
 
 export function Reports() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -14,10 +15,10 @@ export function Reports() {
   const currentYear = new Date().getFullYear();
   
   const filteredTransactions = transactions.filter(t => {
-    const txTime = new Date(t.date).getTime();
+    const txTime = parseAppDate(t.date).getTime();
     if (period === 'week') return nowTime - txTime <= 7 * 24 * 60 * 60 * 1000;
     if (period === 'month') return nowTime - txTime <= 30 * 24 * 60 * 60 * 1000;
-    if (period === 'year') return new Date(t.date).getFullYear() === currentYear;
+    if (period === 'year') return parseAppDate(t.date).getFullYear() === currentYear;
     return true;
   });
 
@@ -61,7 +62,7 @@ export function Reports() {
         
         const dayLabel = d.toLocaleString('es-DO', { weekday: 'short' });
         const dayTx = transactions.filter(t => {
-          const txTime = new Date(t.date).getTime();
+          const txTime = parseAppDate(t.date).getTime();
           return txTime >= startOfDay && txTime <= endOfDay;
         });
 
@@ -79,7 +80,7 @@ export function Reports() {
 
         const monthLabel = d.toLocaleString('es-DO', { month: 'short' });
         const monthTx = transactions.filter(t => {
-          const txTime = new Date(t.date).getTime();
+          const txTime = parseAppDate(t.date).getTime();
           return txTime >= startOfMonth && txTime <= endOfMonth;
         });
 

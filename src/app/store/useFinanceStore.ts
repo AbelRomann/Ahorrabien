@@ -4,6 +4,7 @@ import { Transaction, Budget, RecurringTransaction } from '../data/types';
 import { dbService } from '../services/database';
 import { syncService } from '../services/syncService';
 import { toast } from 'sonner';
+import { formatLocalDateForStorage, parseAppDate } from '../utils/date';
 
 // --- Budget Alert Engine ---
 const ALERTED_KEY = 'budget_alerts_session';
@@ -128,7 +129,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       let addedAny = false;
 
       for (const rt of recurring) {
-        let nextDate = new Date(rt.next_date);
+        let nextDate = parseAppDate(rt.next_date);
         let updated  = false;
 
         while (nextDate <= now) {
@@ -138,7 +139,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             amount:        rt.amount,
             category:      rt.category,
             description:   rt.description,
-            date:          nextDate.toISOString(),
+            date:          formatLocalDateForStorage(nextDate),
             paymentMethod: rt.paymentMethod
           };
 

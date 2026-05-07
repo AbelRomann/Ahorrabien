@@ -20,6 +20,7 @@ import { Switch } from '../components/ui/switch';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { Input } from '../components/ui/input';
+import { parseAppDate } from '../utils/date';
 
 export function Profile() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export function Profile() {
   // Compute active days (days since oldest transaction)
   let activeDays = 1;
   if (transactions.length > 0) {
-    const dates = transactions.map(t => new Date(t.date).getTime());
+    const dates = transactions.map(t => parseAppDate(t.date).getTime());
     const oldest = Math.min(...dates);
     const newest = Math.max(...dates);
     const diffTime = Math.abs(newest - oldest);
