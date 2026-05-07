@@ -19,7 +19,7 @@ export function EditTransaction() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Tarjeta');
+  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
 
   useEffect(() => {
     const tx = transactions.find(t => t.id === id);
@@ -159,8 +159,8 @@ export function EditTransaction() {
               onChange={(e) => setPaymentMethod(e.target.value)}
               className="w-full pl-12 h-14 bg-card border border-border rounded-2xl text-foreground appearance-none"
             >
-              <option>Tarjeta</option>
               <option>Efectivo</option>
+              <option>Tarjeta</option>
               <option>Transferencia</option>
             </select>
           </div>

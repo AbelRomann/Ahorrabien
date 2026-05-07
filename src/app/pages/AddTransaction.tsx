@@ -17,7 +17,7 @@ export function AddTransaction() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [paymentMethod, setPaymentMethod] = useState('Tarjeta');
+  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'>('monthly');
 
@@ -177,8 +177,8 @@ export function AddTransaction() {
               onChange={(e) => setPaymentMethod(e.target.value)}
               className="w-full pl-12 h-14 bg-card border border-border rounded-2xl text-foreground appearance-none"
             >
-              <option>Tarjeta</option>
               <option>Efectivo</option>
+              <option>Tarjeta</option>
               <option>Transferencia</option>
             </select>
           </div>

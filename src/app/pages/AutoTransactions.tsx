@@ -48,7 +48,7 @@ export function AutoTransactions() {
       description: description || 'Pago automático',
       frequency,
       next_date: nextDate.toISOString(),
-      paymentMethod: 'auto'
+      paymentMethod: 'Efectivo'
     };
 
     addRecurring(newRt);
