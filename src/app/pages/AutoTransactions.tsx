@@ -10,6 +10,7 @@ import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { categories as defaultCategories } from '../data/categories';
+import { addFrequencyToDate, formatShortDateLabel } from '../utils/date';
 
 export function AutoTransactions() {
   const navigate = useNavigate();
@@ -18,8 +19,7 @@ export function AutoTransactions() {
   const deleteRecurring = useFinanceStore((state) => state.deleteRecurring);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Form State
+
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [categoryId, setCategoryId] = useState('');
@@ -30,16 +30,6 @@ export function AutoTransactions() {
     if (!amount || !categoryId || !frequency) return;
     Haptics.impact({ style: ImpactStyle.Light });
 
-    const now = new Date();
-    let nextDate = new Date();
-    
-    // Set next date based on frequency
-    if (frequency === 'daily') nextDate.setDate(now.getDate() + 1);
-    else if (frequency === 'weekly') nextDate.setDate(now.getDate() + 7);
-    else if (frequency === 'biweekly') nextDate.setDate(now.getDate() + 14);
-    else if (frequency === 'monthly') nextDate.setMonth(now.getMonth() + 1);
-    else if (frequency === 'yearly') nextDate.setFullYear(now.getFullYear() + 1);
-
     const newRt: RecurringTransaction = {
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
       type,
@@ -47,34 +37,40 @@ export function AutoTransactions() {
       category: categoryId,
       description: description || 'Pago automático',
       frequency,
-      next_date: nextDate.toISOString(),
-      paymentMethod: 'Efectivo'
+      next_date: addFrequencyToDate(new Date(), frequency),
+      paymentMethod: 'Efectivo',
     };
 
     addRecurring(newRt);
     setIsModalOpen(false);
     setAmount('');
+    setCategoryId('');
     setDescription('');
     setFrequency('monthly');
   };
 
   const getFreqLabel = (freq: string) => {
     switch (freq) {
-      case 'daily': return 'Diario';
-      case 'weekly': return 'Semanal';
-      case 'biweekly': return 'Quincenal';
-      case 'monthly': return 'Mensual';
-      case 'yearly': return 'Anual';
-      default: return freq;
+      case 'daily':
+        return 'Diario';
+      case 'weekly':
+        return 'Semanal';
+      case 'biweekly':
+        return 'Quincenal';
+      case 'monthly':
+        return 'Mensual';
+      case 'yearly':
+        return 'Anual';
+      default:
+        return freq;
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-card px-6 py-4 flex items-center gap-4 sticky top-0 z-10 border-b border-border">
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-full flex items-center justify-center bg-muted/20 text-foreground"
         >
           <ArrowLeft size={20} />
@@ -99,15 +95,16 @@ export function AutoTransactions() {
           ) : (
             recurring.map((rt) => {
               const category = getCategoryById(rt.category);
-              const nextDateStr = new Date(rt.next_date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric', year: 'numeric' });
-              
+              const Icon = category?.icon;
+              const nextDateStr = formatShortDateLabel(rt.next_date);
+
               return (
                 <div key={rt.id} className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-center">
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${category?.color}20` || '#33333320' }}
+                    style={{ backgroundColor: category ? `${category.color}20` : '#33333320' }}
                   >
-                    <span className="text-2xl">{category?.icon || '📦'}</span>
+                    {Icon ? <Icon size={24} style={{ color: category?.color }} /> : <span className="text-2xl">📦</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold truncate text-[15px]">{rt.description}</h3>
@@ -120,7 +117,7 @@ export function AutoTransactions() {
                     <p className={`font-bold ${rt.type === 'expense' ? 'text-destructive' : 'text-primary'}`}>
                       {rt.type === 'expense' ? '-' : '+'}${rt.amount.toLocaleString()}
                     </p>
-                    <button 
+                    <button
                       onClick={() => deleteRecurring(rt.id)}
                       className="mt-2 text-destructive/80 hover:text-destructive text-xs italic"
                     >
@@ -141,14 +138,12 @@ export function AutoTransactions() {
         <Plus size={28} className="text-white" />
       </button>
 
-      {/* Add Recurring Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-[340px] sm:max-w-md rounded-[24px]">
           <DialogHeader>
-            <DialogTitle>Nueva Suscripción FIja</DialogTitle>
+            <DialogTitle>Nueva Suscripción Fija</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            
             <div className="flex bg-muted/30 p-1 rounded-xl">
               <button
                 className={`flex-1 py-2 text-sm rounded-lg font-medium ${type === 'expense' ? 'bg-background shadow text-foreground' : 'text-muted-foreground'}`}
@@ -164,24 +159,24 @@ export function AutoTransactions() {
               </button>
             </div>
 
-            <Input 
-              type="number" 
-              placeholder="Monto" 
+            <Input
+              type="number"
+              placeholder="Monto"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="text-xl py-6"
             />
-            
-            <Input 
-              type="text" 
-              placeholder="Descripción (EJ: Factura Luz)" 
+
+            <Input
+              type="text"
+              placeholder="Descripción (EJ: Factura Luz)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
+            <Select value={frequency} onValueChange={(value: any) => setFrequency(value)}>
               <SelectTrigger>
-                 <SelectValue placeholder="Frecuencia" />
+                <SelectValue placeholder="Frecuencia" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily">Diariamente</SelectItem>
@@ -195,25 +190,30 @@ export function AutoTransactions() {
             <div className="pt-2">
               <label className="text-xs font-semibold text-muted-foreground mb-2 block uppercase">Categoría</label>
               <div className="grid grid-cols-4 gap-2">
-                {defaultCategories.filter(c => c.type === type || c.type === 'both').map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setCategoryId(category.id)}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl gap-1 border-2 transition-all ${
-                      categoryId === category.id 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-transparent bg-muted/20 hover:bg-muted/40'
-                    }`}
-                  >
-                    <span className="text-2xl">{category.icon}</span>
-                    <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-                      {category.name}
-                    </span>
-                  </button>
-                ))}
+                {defaultCategories
+                  .filter((category) => category.type === type || category.type === 'both')
+                  .map((category) => {
+                    const Icon = category.icon;
+
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => setCategoryId(category.id)}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl gap-1 border-2 transition-all ${
+                          categoryId === category.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-transparent bg-muted/20 hover:bg-muted/40'
+                        }`}
+                      >
+                        <Icon size={24} style={{ color: category.color }} />
+                        <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                          {category.name}
+                        </span>
+                      </button>
+                    );
+                  })}
               </div>
             </div>
-
           </div>
           <DialogFooter>
             <Button onClick={handleSave} className="w-full py-6 rounded-xl text-md">

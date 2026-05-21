@@ -15,6 +15,21 @@ export function parseAppDate(value: string): Date {
   return new Date(value);
 }
 
+export function addFrequencyToDate(
+  value: string | Date,
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'
+): string {
+  const nextDate = typeof value === 'string' ? parseAppDate(value) : new Date(value.getTime());
+
+  if (frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+  else if (frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+  else if (frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
+  else if (frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+  else if (frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+
+  return formatLocalDateForStorage(nextDate);
+}
+
 export function getTransactionDateKey(value: string): string {
   return DATE_ONLY_REGEX.test(value) ? value : formatLocalDateForStorage(parseAppDate(value));
 }
@@ -29,4 +44,8 @@ export function formatDateLabel(value: string, locale = 'es-ES'): string {
 
 export function formatLongDateLabel(value: string, locale = 'es-ES'): string {
   return parseAppDate(value).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+export function formatShortDateLabel(value: string, locale = 'es-DO'): string {
+  return parseAppDate(value).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
 }

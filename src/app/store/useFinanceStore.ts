@@ -4,7 +4,7 @@ import { Transaction, Budget, RecurringTransaction } from '../data/types';
 import { dbService } from '../services/database';
 import { syncService } from '../services/syncService';
 import { toast } from 'sonner';
-import { formatLocalDateForStorage, parseAppDate } from '../utils/date';
+import { addFrequencyToDate, formatLocalDateForStorage, parseAppDate } from '../utils/date';
 
 // --- Budget Alert Engine ---
 const ALERTED_KEY = 'budget_alerts_session';
@@ -147,15 +147,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           addedAny = true;
           updated  = true;
 
-          if (rt.frequency === 'daily')      nextDate.setDate(nextDate.getDate() + 1);
-          else if (rt.frequency === 'weekly')    nextDate.setDate(nextDate.getDate() + 7);
-          else if (rt.frequency === 'biweekly')  nextDate.setDate(nextDate.getDate() + 14);
-          else if (rt.frequency === 'monthly')   nextDate.setMonth(nextDate.getMonth() + 1);
-          else if (rt.frequency === 'yearly')    nextDate.setFullYear(nextDate.getFullYear() + 1);
+          nextDate = parseAppDate(addFrequencyToDate(nextDate, rt.frequency));
         }
 
         if (updated) {
-          const newStr = nextDate.toISOString();
+          const newStr = formatLocalDateForStorage(nextDate);
           await dbService.updateRecurringTransactionDate(rt.id, newStr);
           // Sync la fecha actualizada
           await syncService.push({

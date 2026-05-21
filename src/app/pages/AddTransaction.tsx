@@ -9,7 +9,7 @@ import { CategoryChip } from '../components/CategoryChip';
 import { categories } from '../data/categories';
 import { toast } from 'sonner';
 import { useFinanceStore } from '../store/useFinanceStore';
-import { formatLocalDateForStorage, parseAppDate } from '../utils/date';
+import { addFrequencyToDate, formatLocalDateForStorage } from '../utils/date';
 
 export function AddTransaction() {
   const navigate = useNavigate();
@@ -48,14 +48,6 @@ export function AddTransaction() {
     });
 
     if (isRecurring) {
-       // Also add as a template for the future
-       const nextDate = parseAppDate(date);
-       if (frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
-       else if (frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-       else if (frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
-       else if (frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
-       else if (frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
-
        await addRecurring({
           id: crypto.randomUUID(),
           type,
@@ -63,7 +55,7 @@ export function AddTransaction() {
           category: selectedCategory,
           description: description || `Auto: ${type === 'expense' ? 'Gasto' : 'Ingreso'}`,
           frequency,
-          next_date: nextDate.toISOString(),
+          next_date: addFrequencyToDate(date, frequency),
           paymentMethod
        });
        toast.info('Automatización programada correctamente');

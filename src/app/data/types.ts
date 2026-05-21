@@ -22,6 +22,6 @@ export interface RecurringTransaction {
   category: string;
   description: string;
   frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
-  next_date: string; // ISO String to easily determine when payment is due
+  next_date: string; // Local YYYY-MM-DD string to avoid timezone drift
   paymentMethod: string;
 }
