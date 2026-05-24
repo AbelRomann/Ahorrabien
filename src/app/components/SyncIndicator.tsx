@@ -30,9 +30,9 @@ export function SyncIndicator() {
     return (
       <div
         title="Sin conexión — los datos se guardan localmente"
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/70 text-xs font-medium"
+        className="flex h-11 items-center gap-2 rounded-2xl border border-white/12 bg-white/8 px-3.5 text-[13px] font-medium text-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
       >
-        <CloudOff size={12} />
+        <CloudOff size={14} />
         <span>Offline</span>
       </div>
     );
@@ -42,9 +42,9 @@ export function SyncIndicator() {
     return (
       <div
         title="Sincronizando con la nube..."
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/80 text-xs font-medium"
+        className="flex h-11 items-center gap-2 rounded-2xl border border-white/12 bg-white/8 px-3.5 text-[13px] font-medium text-white/86 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
       >
-        <RefreshCw size={12} className="animate-spin" />
+        <RefreshCw size={14} className="animate-spin" />
         <span>Sync...</span>
       </div>
     );
@@ -54,9 +54,9 @@ export function SyncIndicator() {
     return (
       <div
         title={`${state.pendingCount} cambio${state.pendingCount !== 1 ? 's' : ''} pendiente${state.pendingCount !== 1 ? 's' : ''} por sincronizar`}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium"
+        className="flex h-11 items-center gap-2 rounded-2xl border border-amber-300/16 bg-amber-500/14 px-3.5 text-[13px] font-medium text-amber-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
       >
-        <Cloud size={12} />
+        <Cloud size={14} />
         <span>{state.pendingCount} pendiente{state.pendingCount !== 1 ? 's' : ''}</span>
       </div>
     );
@@ -66,9 +66,9 @@ export function SyncIndicator() {
   return (
     <div
       title="Datos sincronizados con la nube"
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/60 text-xs font-medium"
+      className="flex h-11 items-center gap-2 rounded-2xl border border-white/12 bg-white/8 px-3.5 text-[13px] font-medium text-white/76 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
     >
-      <CheckCircle2 size={12} />
+      <CheckCircle2 size={14} />
       <span>Sync</span>
     </div>
   );

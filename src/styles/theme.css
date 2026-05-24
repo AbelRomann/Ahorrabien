@@ -6,6 +6,8 @@
   /* AhorraRD Dark Theme */
   --background: #121212;
   --surface: #1E1E1E;
+  --surface-elevated: #242424;
+  --surface-glass: rgba(255, 255, 255, 0.04);
   --foreground: #FFFFFF;
   --card: #1E1E1E;
   --card-foreground: #FFFFFF;
@@ -14,6 +16,8 @@
   
   /* Brand Colors */
   --primary: #10B981; /* Verde esmeralda */
+  --glow-primary: #00F0B5;
+  --glow-secondary: #8B5CF6;
   --primary-foreground: #FFFFFF;
   --secondary: #8B5CF6; /* Morado */
   --secondary-foreground: #FFFFFF;
@@ -53,11 +57,15 @@
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #10B981;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .dark {
   --background: #121212;
   --surface: #1E1E1E;
+  --surface-elevated: #242424;
+  --surface-glass: rgba(255, 255, 255, 0.04);
   --foreground: #FFFFFF;
   --card: #1E1E1E;
   --card-foreground: #FFFFFF;
@@ -65,6 +73,8 @@
   --popover-foreground: #FFFFFF;
   
   --primary: #10B981;
+  --glow-primary: #00F0B5;
+  --glow-secondary: #8B5CF6;
   --primary-foreground: #FFFFFF;
   --secondary: #8B5CF6;
   --secondary-foreground: #FFFFFF;
@@ -99,16 +109,23 @@
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #10B981;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-glass: var(--surface-glass);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-glow-primary: var(--glow-primary);
+  --color-glow-secondary: var(--glow-secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -149,6 +166,10 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100%;
+    overscroll-behavior-y: none;
+    text-rendering: geometricPrecision;
   }
 
   /**
@@ -158,6 +179,8 @@
 
   html {
     font-size: var(--font-size);
+    scroll-behavior: smooth;
+    background: var(--background);
   }
 
   h1 {
@@ -200,5 +223,26 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  .premium-surface {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)),
+      var(--surface-glass);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(22px);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 0 1px rgba(0, 240, 181, 0.18), 0 16px 42px rgba(0, 240, 181, 0.18);
+  }
+
+  .safe-bottom {
+    padding-bottom: calc(1rem + var(--safe-area-bottom));
+  }
+
+  .safe-top {
+    padding-top: calc(3rem + var(--safe-area-top));
   }
 }

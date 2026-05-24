@@ -14,6 +14,7 @@ import { getCategoryById } from '../data/categories';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
+import { motion } from 'motion/react';
 
 export function Home() {
   const navigate = useNavigate();
@@ -64,34 +65,43 @@ export function Home() {
       color: categoryColors[categoryId] || defaultColor
     };
   });
+  const totalCategorizedExpenses = chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-28">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-[#06B6D4] px-6 pt-12 pb-8 rounded-b-[2rem]">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-white/80 text-sm">Buenos días,</p>
-            <h1 className="text-white text-2xl font-bold">{displayName}</h1>
-          </div>
+      <div className="relative overflow-hidden rounded-b-[2.35rem] bg-[linear-gradient(180deg,#0b1518_0%,#0e2428_38%,#10272b_100%)] px-6 safe-top pb-6">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_8%,rgba(26,224,181,0.28),transparent_34%),radial-gradient(circle_at_88%_16%,rgba(32,194,224,0.18),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_42%)]" />
+        <div className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-white/10" />
+        <div className="relative flex justify-between items-start mb-6">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="pr-4">
+            <p className="text-white/62 text-[13px] font-medium tracking-[0.02em]">Buenos días,</p>
+            <h1 className="mt-1 text-white text-[2rem] font-semibold leading-none tracking-tight">{displayName}</h1>
+          </motion.div>
           <div className="flex items-center gap-2">
             <SyncIndicator />
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <Wallet size={24} className="text-white" />
-            </div>
+            <button
+              type="button"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white/88 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-colors hover:bg-white/12"
+              aria-label="Wallet"
+            >
+              <Wallet size={19} />
+            </button>
           </div>
         </div>
 
         {/* Balance Card */}
-        <BalanceCard 
-          balance={balance} 
-          income={totalIncome} 
-          expenses={totalExpenses} 
-        />
+        <div className="relative mb-1">
+          <BalanceCard 
+            balance={balance} 
+            income={totalIncome} 
+            expenses={totalExpenses} 
+          />
+        </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="px-6 -mt-6 mb-6">
+      <motion.div className="px-6 mt-6 mb-6" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
         <div className="grid grid-cols-2 gap-4">
           <StatCard
             icon={TrendingDown}
@@ -118,11 +128,11 @@ export function Home() {
             />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Gastos por categoría */}
-      <div className="px-6 mb-6">
-        <div className="bg-card rounded-2xl p-6 border border-border">
+      <motion.div className="px-6 mb-6" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
+        <div className="bg-surface-elevated/90 rounded-3xl p-6 ring-1 ring-white/8 shadow-[0_18px_45px_rgba(0,0,0,0.2)]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold">Gastos por categoría</h3>
             <button 
@@ -130,20 +140,24 @@ export function Home() {
                 Haptics.impact({ style: ImpactStyle.Light });
                 setShowColorModal(true);
               }} 
-              className="p-1 rounded-full hover:bg-black/5 text-muted-foreground"
+              className="p-2 rounded-full hover:bg-white/5 text-muted-foreground"
             >
               <MoreVertical size={16} />
             </button>
           </div>
-          <div className="h-48">
+          <div className="relative h-48">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-xs text-muted-foreground">Total</span>
+              <span className="text-lg font-extrabold">${totalCategorizedExpenses.toLocaleString()}</span>
+            </div>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
+                  innerRadius={56}
+                  outerRadius={76}
                   paddingAngle={5}
                   dataKey="value"
                   labelLine={false}
@@ -158,17 +172,17 @@ export function Home() {
           </div>
           <div className="grid grid-cols-2 gap-2 mt-4">
             {chartData.slice(0, 4).map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+              <div key={index} className="flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-2">
+                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: item.color, color: item.color }} />
                 <span className="text-xs text-muted-foreground truncate">{item.name}</span>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Recent Transactions */}
-      <div className="px-6 mb-6">
+      <motion.div className="px-6 mb-6" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-semibold">Últimos movimientos</h3>
           <button 
@@ -176,7 +190,7 @@ export function Home() {
               Haptics.impact({ style: ImpactStyle.Light });
               navigate('/history');
             }}
-            className="text-sm text-primary hover:underline"
+            className="rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary ring-1 ring-primary/20"
           >
             Ver todos
           </button>
@@ -186,7 +200,7 @@ export function Home() {
             <TransactionCard key={transaction.id} transaction={transaction} />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Floating Action Button */}
       <button
@@ -194,7 +208,7 @@ export function Home() {
           Haptics.impact({ style: ImpactStyle.Medium });
           navigate('/add-transaction');
         }}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-br from-primary to-[#06B6D4] rounded-full flex items-center justify-center shadow-lg shadow-primary/50 hover:scale-110 transition-transform z-40"
+        className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-br from-primary via-glow-primary to-[#06B6D4] rounded-full flex items-center justify-center animate-glow-pulse hover:scale-105 transition-transform z-40"
       >
         <Plus size={28} className="text-white" />
       </button>
