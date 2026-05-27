@@ -170,13 +170,27 @@ export function Home() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {chartData.slice(0, 4).map((item, index) => (
-              <div key={index} className="flex items-center gap-2 rounded-full bg-white/[0.03] px-3 py-2">
-                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: item.color, color: item.color }} />
-                <span className="text-xs text-muted-foreground truncate">{item.name}</span>
-              </div>
-            ))}
+          <div className="mt-4 max-h-40 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {chartData.map((item) => {
+                const percentage = totalCategorizedExpenses > 0
+                  ? Math.round((item.value / totalCategorizedExpenses) * 100)
+                  : 0;
+
+                return (
+                  <div key={item.categoryId || item.name} className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.03] px-3 py-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: item.color, color: item.color }} />
+                      <span className="truncate text-xs text-muted-foreground">{item.name}</span>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs font-semibold">${item.value.toLocaleString()}</p>
+                      <p className="text-[11px] text-muted-foreground">{percentage}%</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </motion.div>
