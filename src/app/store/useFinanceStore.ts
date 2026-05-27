@@ -87,6 +87,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
       // Muestra datos locales de inmediato
       set({ transactions, budgets, recurring, savingsGoal, categoryColors, isLoading: false });
+      await syncService.hydrateState();
 
       // ── 2. Sync inteligente con Supabase (si hay internet) ───────────────
       // Drenar cola pendiente ANTES de hacer pull para evitar race condition:

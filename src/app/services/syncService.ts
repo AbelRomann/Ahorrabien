@@ -26,6 +26,7 @@ type SyncOperation =
 class SyncService {
   private isSyncing = false;
   private listeners: Array<(state: SyncState) => void> = [];
+  private hasHydratedState = false;
 
   // Estado observable desde la UI
   state: SyncState = { status: 'idle', pendingCount: 0 };
@@ -48,10 +49,22 @@ class SyncService {
     this.listeners.forEach(l => l(this.state));
   }
 
+  async hydrateState(): Promise<void> {
+    const pendingCount = await dbService.getPendingSyncOpsCount();
+    this.hasHydratedState = true;
+    this.setState({
+      status: pendingCount > 0 ? 'error' : 'synced',
+      pendingCount,
+    });
+  }
+
   // ── Enqueue ────────────────────────────────────────────────────────────────
   async enqueue(op: SyncOperation): Promise<void> {
     await dbService.enqueueSyncOp(op);
-    this.setState({ pendingCount: this.state.pendingCount + 1 });
+    this.setState({
+      status: 'error',
+      pendingCount: this.state.pendingCount + 1,
+    });
   }
 
   // ── Push inmediato o encola ────────────────────────────────────────────────
@@ -154,6 +167,9 @@ class SyncService {
 
   // ── Drena la cola de operaciones pendientes ────────────────────────────────
   async drainQueue(): Promise<void> {
+    if (!this.hasHydratedState) {
+      await this.hydrateState();
+    }
     if (this.isSyncing || !isOnline()) return;
     this.isSyncing = true;
     this.setState({ status: 'syncing' });

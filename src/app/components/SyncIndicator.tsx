@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cloud, CloudOff, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { CloudUpload, CloudOff, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { syncService, SyncState } from '../services/syncService';
 
 /**
@@ -50,19 +50,19 @@ export function SyncIndicator() {
     );
   }
 
-  if (state.status === 'error' || (state.status === 'idle' && state.pendingCount > 0)) {
+  if (state.pendingCount > 0) {
     return (
       <div
         title={`${state.pendingCount} cambio${state.pendingCount !== 1 ? 's' : ''} pendiente${state.pendingCount !== 1 ? 's' : ''} por sincronizar`}
         className="flex h-11 items-center gap-2 rounded-2xl border border-amber-300/16 bg-amber-500/14 px-3.5 text-[13px] font-medium text-amber-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl"
       >
-        <Cloud size={14} />
+        <CloudUpload size={14} />
         <span>{state.pendingCount} pendiente{state.pendingCount !== 1 ? 's' : ''}</span>
       </div>
     );
   }
 
-  // synced o idle sin pendientes
+  // synchronized sin pendientes
   return (
     <div
       title="Datos sincronizados con la nube"
