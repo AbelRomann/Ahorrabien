@@ -16,8 +16,7 @@ export function BalanceCard({ balance, income, expenses }: BalanceCardProps) {
       transition={{ duration: 0.45, ease: 'easeOut' }}
       className="relative overflow-hidden rounded-[1.9rem] border border-white/12 bg-[linear-gradient(145deg,rgba(25,192,159,0.34),rgba(7,91,114,0.92))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28),0_0_0_1px_rgba(255,255,255,0.05)] backdrop-blur-2xl"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.2),transparent_30%)]" />
-      <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/12 to-transparent animate-shimmer" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.16),transparent_28%)]" />
       <p className="relative text-white/72 text-[11px] font-semibold uppercase tracking-[0.22em] mb-2">Balance Total</p>
       <motion.h2
         key={balance}
